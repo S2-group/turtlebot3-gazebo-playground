@@ -4,6 +4,8 @@ import rclpy
 from rclpy.node import Node
 from pympler.asizeof import asizeof
 import time
+# import ros_msg String
+from std_msgs.msg import String
 
 def import_msg_type(module, msg_type):
     msg_module = __import__(module, fromlist=[msg_type])
@@ -17,6 +19,7 @@ class MessageStatsNodeAllTopics(Node):
         self.message_counts = {}
         self.message_sizes = {}
         self.setup_subscriptions()
+        self.set_publisher('/message_stats')
 
     def setup_subscriptions(self):
         # Get list of all topics and their message types
@@ -28,12 +31,15 @@ class MessageStatsNodeAllTopics(Node):
             topic_info_output = self._get_command_output(['ros2', 'topic', 'info', topic])
             topic_info = topic_info_output.decode().splitlines()
             message_type = None
+            sub_count = None
             for line in topic_info:
                 if line.startswith("Type: "):
                     message_type = line[len("Type: "):]
-                    break
+                if line.startswith("Subscription count: "):
+                    sub_count = int(line[len("Subscription count: "):])
 
-            if message_type:
+
+            if sub_count > 0 and message_type:
                 # Check if the message type is in the correct format
                 if '/' not in message_type:
                     print(f"Invalid message type format for topic '{topic}'. Skipping...")
@@ -53,6 +59,14 @@ class MessageStatsNodeAllTopics(Node):
                 self.create_subscription(msg_type_class, topic, lambda msg, topic=topic: self.callback(msg, topic), 10)
         print("Finished setting up subscriptions, topics: ", self.message_counts.keys())
 
+    def set_publisher(self, output_topic):
+        # Create a publisher on the specified output topic
+        self.publisher = self.create_publisher(
+            String,  # Change message type as needed
+            output_topic,
+            10  # Set your desired queue size
+        )
+
     def _get_command_output(self, command):
         import subprocess
         try:
@@ -66,7 +80,7 @@ class MessageStatsNodeAllTopics(Node):
         self.message_sizes[topic_name] += asizeof(msg)
 
     def print_stats(self):
-        self.get_logger().info("Message statistics:")
+        # self.get_logger().info("Message statistics:")
         # set get_logger() to print to file
         
         total_count = 0
@@ -75,12 +89,12 @@ class MessageStatsNodeAllTopics(Node):
             size = self.message_sizes[topic] / 1000000  # Convert bytes to MB
             total_count += count
             total_size += size
-            self.get_logger().info(f"Topic: {topic}, Count: {count}, Size: {size} MB")
-        self.get_logger().info(f"Total Count: {total_count}, Total Size: {total_size} MB")
+            print(f"Topic: {topic}, Count: {count}, Size: {size} MB")
+        print(f"Total Count: {total_count}, Total Size: {total_size} MB")
 
 def main(args=None):
     rclpy.init(args=args)
-    rclpy.logging.get_logger('rclpy').set_level(rclpy.logging.LoggingSeverity.ERROR)
+    # rclpy.logging.get_logger('rclpy').set_level(rclpy.logging.LoggingSeverity.ERROR)
     node = MessageStatsNodeAllTopics()
     start_time = time.time()
     print("Start time: ", start_time)
