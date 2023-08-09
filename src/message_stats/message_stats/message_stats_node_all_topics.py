@@ -39,7 +39,7 @@ class MessageStatsNodeAllTopics(Node):
                     sub_count = int(line[len("Subscription count: "):])
 
 
-            if sub_count > 0 and message_type:
+            if sub_count and sub_count> 0 and message_type:
                 # Check if the message type is in the correct format
                 if '/' not in message_type:
                     print(f"Invalid message type format for topic '{topic}'. Skipping...")
