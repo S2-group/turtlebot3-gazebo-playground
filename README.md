@@ -29,10 +29,7 @@ ros2 action send_goal navigate_to_pose nav2_msgs/NavigateToPose "pose: { pose: {
 build
 ```console
 colcon build --packages-select message_stats
-```
-
-run
-```console
+source install/setup.bash
 ros2 run message_stats all
 ```
 
