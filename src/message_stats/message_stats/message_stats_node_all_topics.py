@@ -87,6 +87,8 @@ class MessageStatsNodeAllTopics(Node):
         total_size = 0
         for topic, count in self.message_counts.items():
             size = self.message_sizes[topic] / 1000000  # Convert bytes to MB
+            # format size to 2 decimal places
+            size = "{:.2f}".format(size)
             total_count += count
             total_size += size
             print(f"Topic: {topic}, Count: {count}, Size: {size} MB")
